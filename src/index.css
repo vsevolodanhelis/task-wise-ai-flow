@@ -33,7 +33,7 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 255 65% 75%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
 
     --sidebar-background: 255 65% 99%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -101,6 +101,12 @@
   body {
     overscroll-behavior-y: contain;
   }
+
+  /* Improved font rendering */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 @layer utilities {
@@ -128,12 +134,26 @@
   .text-task-yellow {
     @apply text-[hsl(var(--task-yellow))];
   }
+
+  /* Glass effect utilities */
+  .glass {
+    @apply backdrop-blur-md bg-white/70 border border-white/20 shadow-sm;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-task-purple to-task-purple-dark;
+  }
+
+  /* Button pulse effect */
+  .pulse-btn {
+    @apply relative after:absolute after:inset-0 after:rounded-full after:shadow-[0_0_0_3px_theme(colors.task-purple.DEFAULT)] after:opacity-0 after:transition-all hover:after:opacity-100 hover:after:scale-110;
+  }
 }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 ::-webkit-scrollbar-track {
@@ -185,6 +205,16 @@
 
 .animate-slide-up {
   animation: slide-up 0.3s ease-out forwards;
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: all 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
 }
 
 /* Fancy mobile optimizations */

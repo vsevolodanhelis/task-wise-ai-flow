@@ -23,6 +23,13 @@ const priorityColors: Record<TaskPriority, string> = {
   urgent: "bg-task-red text-red-800",
 };
 
+const priorityBorders: Record<TaskPriority, string> = {
+  low: "border-l-task-blue",
+  medium: "border-l-task-yellow",
+  high: "border-l-task-orange",
+  urgent: "border-l-task-red",
+};
+
 export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
   const { toggleTaskStatus, deleteTask } = useTaskContext();
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
@@ -47,20 +54,23 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
     setShowDeleteAlert(false);
   };
 
+  const isCompletedClass = task.status === "completed" ? "opacity-70" : "";
+  
   return (
     <>
       <Card 
         className={cn(
-          "mb-3 transition-all duration-200 hover:shadow-md cursor-pointer animate-fade-in border-l-4",
-          task.status === "completed" ? "opacity-70 border-green-400" : 
-          task.priority === "urgent" ? "border-task-red" :
-          task.priority === "high" ? "border-task-orange" :
-          task.priority === "medium" ? "border-task-yellow" :
-          "border-task-blue"
+          "mb-3 transition-all duration-200 hover:shadow hover:translate-y-[-2px] cursor-pointer animate-fade-in border-l-4 rounded-lg overflow-hidden",
+          priorityBorders[task.priority],
+          isCompletedClass
         )}
         onClick={onClick}
       >
         <CardContent className="p-4">
+          {task.status === "completed" && (
+            <div className="absolute top-0 left-0 right-0 h-1 bg-green-400" />
+          )}
+          
           <div className="flex justify-between items-start mb-2">
             <div>
               <h3 className={cn(
@@ -80,26 +90,33 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
               <Button
                 size="icon"
                 variant="ghost"
+                className="rounded-full hover:bg-background"
                 onClick={handleToggleStatus}
               >
-                <Check className={cn(
-                  "h-4 w-4",
-                  task.status === "completed" && "text-green-500"
-                )} />
+                <div className={cn(
+                  "h-5 w-5 rounded-full border flex items-center justify-center",
+                  task.status === "completed" 
+                    ? "bg-green-400 border-green-500" 
+                    : "bg-transparent border-gray-300"
+                )}>
+                  {task.status === "completed" && <Check className="h-3 w-3 text-white" />}
+                </div>
               </Button>
               <Button
                 size="icon"
                 variant="ghost"
+                className="rounded-full hover:bg-background"
                 onClick={handleEdit}
               >
-                <Edit className="h-4 w-4" />
+                <Edit className="h-4 w-4 text-muted-foreground" />
               </Button>
               <Button
                 size="icon"
                 variant="ghost"
+                className="rounded-full hover:bg-background hover:text-red-500"
                 onClick={handleDelete}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-4 w-4 text-muted-foreground" />
               </Button>
             </div>
           </div>
@@ -107,48 +124,54 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
           {task.progress !== undefined && task.progress > 0 && (
             <Progress 
               value={task.progress} 
-              className="h-2 mb-3"
+              className="h-1.5 mb-3"
               indicatorClassName={cn(
                 task.progress === 100 ? "bg-green-500" : task.progress > 50 ? "bg-task-blue" : "bg-task-purple"
               )}
             />
           )}
           
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-3">
             {task.tags.map((tag) => (
-              <Badge key={tag.id} style={{ backgroundColor: tag.color, color: "white" }} className="shadow-sm">
+              <Badge 
+                key={tag.id} 
+                style={{ backgroundColor: tag.color, color: "white" }} 
+                className="shadow-sm text-xs font-normal px-2 py-0.5"
+              >
                 {tag.name}
               </Badge>
             ))}
             
-            <Badge className={cn(priorityColors[task.priority], "ml-auto shadow-sm")}>
-              {task.priority}
-            </Badge>
-            
-            {task.dueDate && (
-              <Badge variant="outline" className="flex items-center gap-1 shadow-sm">
-                <Clock className="h-3 w-3" />
-                {format(new Date(task.dueDate), "MMM d")}
+            <div className="ml-auto flex items-center gap-2">
+              <Badge className={cn(priorityColors[task.priority], "shadow-sm text-xs font-normal")}>
+                {task.priority}
               </Badge>
-            )}
+              
+              {task.dueDate && (
+                <Badge variant="outline" className="flex items-center gap-1 shadow-sm border-muted">
+                  <Clock className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-xs">{format(new Date(task.dueDate), "MMM d")}</span>
+                </Badge>
+              )}
+            </div>
           </div>
           
           {task.aiScore !== undefined && (
             <div className="mt-3 flex items-center">
               <div className="text-xs text-muted-foreground flex items-center">
                 <Sparkles className="h-3 w-3 mr-1 text-task-purple" />
-                AI Priority:
-              </div>
-              <div className="ml-1 text-xs font-medium">
-                {task.aiScore}
+                AI Priority
               </div>
               <div 
-                className="ml-1 h-2 flex-1 bg-gray-200 rounded-full overflow-hidden"
+                className="ml-2 h-1.5 flex-1 bg-gray-200 rounded-full overflow-hidden"
               >
                 <div 
                   className="h-full bg-gradient-to-r from-task-purple to-task-purple-dark" 
                   style={{ width: `${task.aiScore}%` }}
                 />
+              </div>
+              <div className="ml-2 text-xs font-medium">
+                {task.aiScore}%
               </div>
             </div>
           )}
@@ -156,16 +179,16 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
       </Card>
       
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
-        <AlertDialogContent>
+        <AlertDialogContent className="rounded-xl border border-border/70">
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure you want to delete this task?</AlertDialogTitle>
+            <AlertDialogTitle>Delete this task?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the task "{task.title}".
+              This action cannot be undone. This will permanently delete "{task.title}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600">
+            <AlertDialogCancel className="rounded-full">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-500 hover:bg-red-600 rounded-full">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

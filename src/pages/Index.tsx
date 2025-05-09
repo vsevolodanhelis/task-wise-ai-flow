@@ -28,69 +28,72 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+    <div className="min-h-screen bg-gradient-to-b from-background to-accent/20">
+      <header className="sticky top-0 z-10 bg-background/90 backdrop-blur-md border-b border-border/50 px-4 py-3">
+        <div className="flex justify-between items-center">
           <div className="flex items-center">
-            <h1 className="text-2xl font-bold text-foreground flex items-center">
-              <span className="text-task-purple">Kai</span>
-              <span>ro</span>
-              <Sparkles className="ml-1 h-4 w-4 text-task-yellow" />
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-task-purple to-task-purple-dark bg-clip-text text-transparent">
+              Kairo
             </h1>
-            <span className="ml-2 bg-gradient-to-r from-task-purple to-task-purple-dark px-2 py-0.5 text-xs text-white rounded-full">
+            <span className="ml-2 bg-gradient-to-r from-task-purple to-task-purple-dark px-2 py-0.5 text-xs text-white rounded-full shadow-sm">
               Beta
             </span>
           </div>
           <Button
-            className="bg-gradient-to-r from-task-purple to-task-purple-dark hover:bg-task-purple-dark transition-all shadow-md hover:shadow-lg"
+            className="bg-gradient-to-r from-task-purple to-task-purple-dark hover:bg-task-purple-dark transition-all shadow-sm"
+            size="sm"
             onClick={handleAddTask}
           >
-            <Plus className="mr-2 h-4 w-4" />
+            <Plus className="mr-1 h-3.5 w-3.5" />
             Add Task
           </Button>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col gap-6">
+      <div className="px-4 py-4">
+        <div className="flex flex-col gap-5">
           {/* Mobile Tabs */}
           <div className="w-full flex overflow-x-auto no-scrollbar space-x-2 pb-2">
             <Button
               variant={activeView === "tasks" ? "default" : "outline"}
-              className={`flex justify-start whitespace-nowrap ${
-                activeView === "tasks" ? "bg-task-purple hover:bg-task-purple-dark" : ""
+              className={`flex justify-start whitespace-nowrap rounded-full ${
+                activeView === "tasks" ? "bg-task-purple hover:bg-task-purple-dark text-white shadow-sm" : "border-border/50"
               }`}
+              size="sm"
               onClick={() => setActiveView("tasks")}
             >
-              <List className="mr-2 h-4 w-4" />
+              <List className="mr-1.5 h-3.5 w-3.5" />
               Tasks
             </Button>
             <Button
               variant={activeView === "analytics" ? "default" : "outline"}
-              className={`flex justify-start whitespace-nowrap ${
-                activeView === "analytics" ? "bg-task-purple hover:bg-task-purple-dark" : ""
+              className={`flex justify-start whitespace-nowrap rounded-full ${
+                activeView === "analytics" ? "bg-task-purple hover:bg-task-purple-dark text-white shadow-sm" : "border-border/50"
               }`}
+              size="sm"
               onClick={() => setActiveView("analytics")}
             >
-              <LayoutDashboard className="mr-2 h-4 w-4" />
+              <LayoutDashboard className="mr-1.5 h-3.5 w-3.5" />
               Analytics
             </Button>
             <Button 
               variant="outline" 
-              className="flex justify-start whitespace-nowrap" 
+              className="flex justify-start whitespace-nowrap rounded-full border-border/50" 
+              size="sm"
               disabled
             >
-              <Calendar className="mr-2 h-4 w-4" />
+              <Calendar className="mr-1.5 h-3.5 w-3.5" />
               Calendar
             </Button>
             <Button 
               variant={showAiPrioritized ? "default" : "outline"}
-              className={`flex justify-start whitespace-nowrap ${
-                showAiPrioritized ? "bg-task-purple hover:bg-task-purple-dark" : ""
+              className={`flex justify-start whitespace-nowrap rounded-full ${
+                showAiPrioritized ? "bg-task-purple hover:bg-task-purple-dark text-white shadow-sm" : "border-border/50"
               }`}
+              size="sm"
               onClick={() => setShowAiPrioritized(!showAiPrioritized)}
             >
-              <Sparkles className="mr-2 h-4 w-4" />
+              <Sparkles className="mr-1.5 h-3.5 w-3.5" />
               AI Priority
             </Button>
           </div>
@@ -109,7 +112,7 @@ const Dashboard = () => {
             />
 
             {/* Main view */}
-            <div className="mt-6">
+            <div className="mt-4">
               {activeView === "tasks" ? (
                 <TaskList
                   filter={currentFilter}
@@ -126,13 +129,24 @@ const Dashboard = () => {
       </div>
 
       <Dialog open={showAddTask} onOpenChange={setShowAddTask}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px] rounded-xl border border-border/70 shadow-xl">
           <DialogHeader>
-            <DialogTitle>Add New Task</DialogTitle>
+            <DialogTitle className="text-center text-lg font-semibold">Add New Task</DialogTitle>
           </DialogHeader>
           <TaskForm onComplete={handleAddTaskComplete} />
         </DialogContent>
       </Dialog>
+      
+      {/* Mobile Action Button */}
+      <div className="fixed bottom-6 right-6">
+        <Button 
+          onClick={handleAddTask}
+          size="icon" 
+          className="h-14 w-14 rounded-full shadow-lg bg-gradient-to-r from-task-purple to-task-purple-dark hover:bg-task-purple-dark transition-all"
+        >
+          <Plus className="h-6 w-6" />
+        </Button>
+      </div>
     </div>
   );
 };
