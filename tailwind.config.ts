@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,32 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom colors for our task app
+				'task-purple': {
+					DEFAULT: '#9b87f5',
+					dark: '#7E69AB',
+				},
+				'task-blue': {
+					light: '#D3E4FD',
+					DEFAULT: '#5C95FF',
+				},
+				'task-green': {
+					light: '#F2FCE2',
+					DEFAULT: '#6ECB63',
+				},
+				'task-yellow': {
+					light: '#FEF7CD',
+					DEFAULT: '#FFCB42',
+				},
+				'task-orange': {
+					light: '#FEC6A1',
+					DEFAULT: '#FF884B',
+				},
+				'task-red': {
+					light: '#FFDEE2',
+					DEFAULT: '#ea384c',
+				},
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
@@ -84,11 +110,33 @@ export default {
 					to: {
 						height: '0'
 					}
-				}
+				},
+				'fade-in': {
+					"0%": {
+						opacity: "0",
+						transform: "translateY(10px)"
+					},
+					"100%": {
+						opacity: "1",
+						transform: "translateY(0)"
+					}
+				},
+				'scale-in': {
+					"0%": {
+						transform: "scale(0.95)",
+						opacity: "0"
+					},
+					"100%": {
+						transform: "scale(1)",
+						opacity: "1"
+					}
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'fade-in': 'fade-in 0.3s ease-out',
+				'scale-in': 'scale-in 0.2s ease-out',
 			}
 		}
 	},
