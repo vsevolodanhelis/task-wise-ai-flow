@@ -13,7 +13,7 @@ const queryClient = new QueryClient();
 const App = () => {
   useEffect(() => {
     // Set the document title
-    document.title = "TaskAI - Smart Task Management";
+    document.title = "Kairo - Smart Task Management";
   }, []);
 
   return (

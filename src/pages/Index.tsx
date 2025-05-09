@@ -18,7 +18,6 @@ const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
   const [showAiPrioritized, setShowAiPrioritized] = useState(false);
   const [activeView, setActiveView] = useState<"tasks" | "analytics">("tasks");
-  const isMobile = useIsMobile();
 
   const handleAddTask = () => {
     setShowAddTask(true);
@@ -34,8 +33,8 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center">
             <h1 className="text-2xl font-bold text-foreground flex items-center">
-              <span className="text-task-purple">Task</span>
-              <span>AI</span>
+              <span className="text-task-purple">Kai</span>
+              <span>ro</span>
               <Sparkles className="ml-1 h-4 w-4 text-task-yellow" />
             </h1>
             <span className="ml-2 bg-gradient-to-r from-task-purple to-task-purple-dark px-2 py-0.5 text-xs text-white rounded-full">
@@ -53,104 +52,47 @@ const Dashboard = () => {
       </header>
 
       <div className="container mx-auto px-4 py-6">
-        <div className="flex flex-col lg:flex-row gap-6">
+        <div className="flex flex-col gap-6">
           {/* Mobile Tabs */}
-          {isMobile && (
-            <div className="w-full flex overflow-x-auto no-scrollbar space-x-2 pb-2">
-              <Button
-                variant={activeView === "tasks" ? "default" : "outline"}
-                className={`flex justify-start whitespace-nowrap ${
-                  activeView === "tasks" ? "bg-task-purple hover:bg-task-purple-dark" : ""
-                }`}
-                onClick={() => setActiveView("tasks")}
-              >
-                <List className="mr-2 h-4 w-4" />
-                Tasks
-              </Button>
-              <Button
-                variant={activeView === "analytics" ? "default" : "outline"}
-                className={`flex justify-start whitespace-nowrap ${
-                  activeView === "analytics" ? "bg-task-purple hover:bg-task-purple-dark" : ""
-                }`}
-                onClick={() => setActiveView("analytics")}
-              >
-                <LayoutDashboard className="mr-2 h-4 w-4" />
-                Analytics
-              </Button>
-              <Button 
-                variant="outline" 
-                className="flex justify-start whitespace-nowrap" 
-                disabled
-              >
-                <Calendar className="mr-2 h-4 w-4" />
-                Calendar
-              </Button>
-              <Button 
-                variant={showAiPrioritized ? "default" : "outline"}
-                className={`flex justify-start whitespace-nowrap ${
-                  showAiPrioritized ? "bg-task-purple hover:bg-task-purple-dark" : ""
-                }`}
-                onClick={() => setShowAiPrioritized(!showAiPrioritized)}
-              >
-                <Sparkles className="mr-2 h-4 w-4" />
-                AI Priority
-              </Button>
-            </div>
-          )}
-
-          {/* Sidebar for Desktop */}
-          <div className="hidden lg:block w-64 flex-shrink-0">
-            <div className="bg-sidebar rounded-lg shadow-md overflow-hidden h-full">
-              <div className="p-4 space-y-2">
-                <Button
-                  variant={activeView === "tasks" ? "default" : "outline"}
-                  className={`flex justify-start w-full ${
-                    activeView === "tasks" ? "bg-task-purple hover:bg-task-purple-dark" : ""
-                  }`}
-                  onClick={() => setActiveView("tasks")}
-                >
-                  <List className="mr-2 h-4 w-4" />
-                  Tasks
-                </Button>
-                <Button
-                  variant={activeView === "analytics" ? "default" : "outline"}
-                  className={`flex justify-start w-full ${
-                    activeView === "analytics" ? "bg-task-purple hover:bg-task-purple-dark" : ""
-                  }`}
-                  onClick={() => setActiveView("analytics")}
-                >
-                  <LayoutDashboard className="mr-2 h-4 w-4" />
-                  Analytics
-                </Button>
-                <Button variant="outline" className="flex justify-start w-full" disabled>
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Calendar (Coming Soon)
-                </Button>
-                <Button variant="outline" className="flex justify-start w-full" disabled>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings (Coming Soon)
-                </Button>
-              </div>
-
-              <div className="mt-6 p-4 bg-accent/50 rounded-lg mx-4">
-                <h3 className="font-medium mb-2 flex items-center">
-                  AI Assistant
-                  <Sparkles className="ml-2 h-3 w-3 text-task-yellow" />
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  TaskAI helps you prioritize tasks based on deadlines, importance, and your work habits.
-                </p>
-                <Button
-                  variant={showAiPrioritized ? "default" : "outline"}
-                  className={`w-full ${
-                    showAiPrioritized ? "bg-task-purple hover:bg-task-purple-dark" : ""
-                  }`}
-                  onClick={() => setShowAiPrioritized(!showAiPrioritized)}
-                >
-                  {showAiPrioritized ? "Hide AI Priorities" : "Show AI Priorities"}
-                </Button>
-              </div>
-            </div>
+          <div className="w-full flex overflow-x-auto no-scrollbar space-x-2 pb-2">
+            <Button
+              variant={activeView === "tasks" ? "default" : "outline"}
+              className={`flex justify-start whitespace-nowrap ${
+                activeView === "tasks" ? "bg-task-purple hover:bg-task-purple-dark" : ""
+              }`}
+              onClick={() => setActiveView("tasks")}
+            >
+              <List className="mr-2 h-4 w-4" />
+              Tasks
+            </Button>
+            <Button
+              variant={activeView === "analytics" ? "default" : "outline"}
+              className={`flex justify-start whitespace-nowrap ${
+                activeView === "analytics" ? "bg-task-purple hover:bg-task-purple-dark" : ""
+              }`}
+              onClick={() => setActiveView("analytics")}
+            >
+              <LayoutDashboard className="mr-2 h-4 w-4" />
+              Analytics
+            </Button>
+            <Button 
+              variant="outline" 
+              className="flex justify-start whitespace-nowrap" 
+              disabled
+            >
+              <Calendar className="mr-2 h-4 w-4" />
+              Calendar
+            </Button>
+            <Button 
+              variant={showAiPrioritized ? "default" : "outline"}
+              className={`flex justify-start whitespace-nowrap ${
+                showAiPrioritized ? "bg-task-purple hover:bg-task-purple-dark" : ""
+              }`}
+              onClick={() => setShowAiPrioritized(!showAiPrioritized)}
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              AI Priority
+            </Button>
           </div>
 
           {/* Main content */}
