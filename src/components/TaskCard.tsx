@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { Check, Clock, Edit, Trash2 } from "lucide-react";
+import { Check, Clock, Edit, Trash2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface TaskCardProps {
@@ -51,8 +51,12 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
     <>
       <Card 
         className={cn(
-          "mb-3 transition-all duration-200 hover:shadow-md cursor-pointer animate-fade-in",
-          task.status === "completed" ? "opacity-70" : ""
+          "mb-3 transition-all duration-200 hover:shadow-md cursor-pointer animate-fade-in border-l-4",
+          task.status === "completed" ? "opacity-70 border-green-400" : 
+          task.priority === "urgent" ? "border-task-red" :
+          task.priority === "high" ? "border-task-orange" :
+          task.priority === "medium" ? "border-task-yellow" :
+          "border-task-blue"
         )}
         onClick={onClick}
       >
@@ -112,17 +116,17 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
           
           <div className="flex flex-wrap gap-2 mt-2">
             {task.tags.map((tag) => (
-              <Badge key={tag.id} style={{ backgroundColor: tag.color, color: "white" }}>
+              <Badge key={tag.id} style={{ backgroundColor: tag.color, color: "white" }} className="shadow-sm">
                 {tag.name}
               </Badge>
             ))}
             
-            <Badge className={cn(priorityColors[task.priority], "ml-auto")}>
+            <Badge className={cn(priorityColors[task.priority], "ml-auto shadow-sm")}>
               {task.priority}
             </Badge>
             
             {task.dueDate && (
-              <Badge variant="outline" className="flex items-center gap-1">
+              <Badge variant="outline" className="flex items-center gap-1 shadow-sm">
                 <Clock className="h-3 w-3" />
                 {format(new Date(task.dueDate), "MMM d")}
               </Badge>
@@ -130,8 +134,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
           </div>
           
           {task.aiScore !== undefined && (
-            <div className="mt-2 flex items-center">
-              <div className="text-xs text-muted-foreground">AI Priority Score:</div>
+            <div className="mt-3 flex items-center">
+              <div className="text-xs text-muted-foreground flex items-center">
+                <Sparkles className="h-3 w-3 mr-1 text-task-purple" />
+                AI Priority:
+              </div>
               <div className="ml-1 text-xs font-medium">
                 {task.aiScore}
               </div>

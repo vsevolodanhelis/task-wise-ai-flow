@@ -7,7 +7,7 @@ import { TaskForm } from "@/components/TaskForm";
 import { TaskAnalytics } from "@/components/TaskAnalytics";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, LayoutDashboard, List, Calendar, Settings } from "lucide-react";
+import { Plus, LayoutDashboard, List, Calendar, Settings, Sparkles } from "lucide-react";
 import { TaskStatus } from "@/types/task";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -30,19 +30,20 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-background border-b">
+      <header className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center">
             <h1 className="text-2xl font-bold text-foreground flex items-center">
               <span className="text-task-purple">Task</span>
               <span>AI</span>
+              <Sparkles className="ml-1 h-4 w-4 text-task-yellow" />
             </h1>
-            <span className="ml-2 bg-task-purple px-2 py-0.5 text-xs text-white rounded-full">
+            <span className="ml-2 bg-gradient-to-r from-task-purple to-task-purple-dark px-2 py-0.5 text-xs text-white rounded-full">
               Beta
             </span>
           </div>
           <Button
-            className="bg-task-purple hover:bg-task-purple-dark"
+            className="bg-gradient-to-r from-task-purple to-task-purple-dark hover:bg-task-purple-dark transition-all shadow-md hover:shadow-lg"
             onClick={handleAddTask}
           >
             <Plus className="mr-2 h-4 w-4" />
@@ -53,30 +54,74 @@ const Dashboard = () => {
 
       <div className="container mx-auto px-4 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar */}
-          <div className="w-full lg:w-64 flex flex-row lg:flex-col space-x-2 lg:space-x-0 lg:space-y-2 overflow-x-auto lg:overflow-x-visible">
-            <Button
-              variant={activeView === "tasks" ? "default" : "outline"}
-              className={`flex justify-start w-full ${
-                activeView === "tasks" ? "bg-task-purple hover:bg-task-purple-dark" : ""
-              }`}
-              onClick={() => setActiveView("tasks")}
-            >
-              <List className="mr-2 h-4 w-4" />
-              Tasks
-            </Button>
-            <Button
-              variant={activeView === "analytics" ? "default" : "outline"}
-              className={`flex justify-start w-full ${
-                activeView === "analytics" ? "bg-task-purple hover:bg-task-purple-dark" : ""
-              }`}
-              onClick={() => setActiveView("analytics")}
-            >
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              Analytics
-            </Button>
-            {!isMobile && (
-              <>
+          {/* Mobile Tabs */}
+          {isMobile && (
+            <div className="w-full flex overflow-x-auto no-scrollbar space-x-2 pb-2">
+              <Button
+                variant={activeView === "tasks" ? "default" : "outline"}
+                className={`flex justify-start whitespace-nowrap ${
+                  activeView === "tasks" ? "bg-task-purple hover:bg-task-purple-dark" : ""
+                }`}
+                onClick={() => setActiveView("tasks")}
+              >
+                <List className="mr-2 h-4 w-4" />
+                Tasks
+              </Button>
+              <Button
+                variant={activeView === "analytics" ? "default" : "outline"}
+                className={`flex justify-start whitespace-nowrap ${
+                  activeView === "analytics" ? "bg-task-purple hover:bg-task-purple-dark" : ""
+                }`}
+                onClick={() => setActiveView("analytics")}
+              >
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+                Analytics
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex justify-start whitespace-nowrap" 
+                disabled
+              >
+                <Calendar className="mr-2 h-4 w-4" />
+                Calendar
+              </Button>
+              <Button 
+                variant={showAiPrioritized ? "default" : "outline"}
+                className={`flex justify-start whitespace-nowrap ${
+                  showAiPrioritized ? "bg-task-purple hover:bg-task-purple-dark" : ""
+                }`}
+                onClick={() => setShowAiPrioritized(!showAiPrioritized)}
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                AI Priority
+              </Button>
+            </div>
+          )}
+
+          {/* Sidebar for Desktop */}
+          <div className="hidden lg:block w-64 flex-shrink-0">
+            <div className="bg-sidebar rounded-lg shadow-md overflow-hidden h-full">
+              <div className="p-4 space-y-2">
+                <Button
+                  variant={activeView === "tasks" ? "default" : "outline"}
+                  className={`flex justify-start w-full ${
+                    activeView === "tasks" ? "bg-task-purple hover:bg-task-purple-dark" : ""
+                  }`}
+                  onClick={() => setActiveView("tasks")}
+                >
+                  <List className="mr-2 h-4 w-4" />
+                  Tasks
+                </Button>
+                <Button
+                  variant={activeView === "analytics" ? "default" : "outline"}
+                  className={`flex justify-start w-full ${
+                    activeView === "analytics" ? "bg-task-purple hover:bg-task-purple-dark" : ""
+                  }`}
+                  onClick={() => setActiveView("analytics")}
+                >
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Analytics
+                </Button>
                 <Button variant="outline" className="flex justify-start w-full" disabled>
                   <Calendar className="mr-2 h-4 w-4" />
                   Calendar (Coming Soon)
@@ -85,12 +130,13 @@ const Dashboard = () => {
                   <Settings className="mr-2 h-4 w-4" />
                   Settings (Coming Soon)
                 </Button>
-              </>
-            )}
+              </div>
 
-            {!isMobile && (
-              <div className="mt-6 p-4 bg-accent/50 rounded-lg">
-                <h3 className="font-medium mb-2">AI Assistant</h3>
+              <div className="mt-6 p-4 bg-accent/50 rounded-lg mx-4">
+                <h3 className="font-medium mb-2 flex items-center">
+                  AI Assistant
+                  <Sparkles className="ml-2 h-3 w-3 text-task-yellow" />
+                </h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   TaskAI helps you prioritize tasks based on deadlines, importance, and your work habits.
                 </p>
@@ -104,7 +150,7 @@ const Dashboard = () => {
                   {showAiPrioritized ? "Hide AI Priorities" : "Show AI Priorities"}
                 </Button>
               </div>
-            )}
+            </div>
           </div>
 
           {/* Main content */}

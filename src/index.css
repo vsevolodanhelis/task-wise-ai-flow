@@ -83,6 +83,18 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv01", "cv02", "cv03";
+  }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
   }
 }
 
