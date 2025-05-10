@@ -1,6 +1,6 @@
 
 import * as React from "react"
-import { Device } from "@capacitor/core";
+import { Device } from "@capacitor/device";
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState(true);
