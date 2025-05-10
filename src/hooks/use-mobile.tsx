@@ -1,6 +1,6 @@
 
 import * as React from "react"
-import { Platform } from "@capacitor/core";
+import { Device } from "@capacitor/core";
 
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState(true);
@@ -8,8 +8,8 @@ export function useIsMobile() {
   React.useEffect(() => {
     async function checkPlatform() {
       try {
-        const platform = await Platform.getInfo();
-        setIsMobile(platform.platform !== "web");
+        const info = await Device.getInfo();
+        setIsMobile(info.platform !== "web");
       } catch (e) {
         // If Capacitor isn't available, we're likely in a web browser
         const userAgent = navigator.userAgent;
@@ -23,6 +23,11 @@ export function useIsMobile() {
     const handleResize = () => {
       if (window.innerWidth < 768) {
         setIsMobile(true);
+      } else {
+        // Only update if we're in a browser context
+        const userAgent = navigator.userAgent;
+        const mobileCheck = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+        setIsMobile(mobileCheck);
       }
     };
     
