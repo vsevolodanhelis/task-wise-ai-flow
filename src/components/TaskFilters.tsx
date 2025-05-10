@@ -9,6 +9,7 @@ import { TaskStatus } from "@/types/task";
 import { Search, Filter, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TaskFiltersProps {
   onFilterChange: (tagId: string) => void;
@@ -32,6 +33,7 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
   const { tags } = useTaskContext();
   const [searchQuery, setSearchQuery] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -63,7 +65,10 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
           placeholder="Search tasks..."
-          className="pl-9 pr-9 w-full rounded-full bg-background border-border/50 focus-visible:ring-task-purple"
+          className={cn(
+            "pl-9 pr-9 w-full rounded-full bg-background border-border/50 focus-visible:ring-task-purple",
+            isMobile && "h-11 text-base"
+          )}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -88,7 +93,8 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
                 size="sm"
                 className={cn(
                   "rounded-full border-border/50",
-                  (currentFilter || currentStatus !== "all") && "border-task-purple text-task-purple"
+                  (currentFilter || currentStatus !== "all") && "border-task-purple text-task-purple",
+                  isMobile && "h-10 text-sm px-4"
                 )}
               >
                 <Filter className="h-3.5 w-3.5 mr-1.5" />
@@ -125,7 +131,10 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
                 onValueChange={handleStatusChange}
                 className="w-full"
               >
-                <TabsList className="grid grid-cols-4 w-full rounded-full h-9 bg-muted/50 p-1">
+                <TabsList className={cn(
+                  "grid grid-cols-4 w-full rounded-full bg-muted/50 p-1",
+                  isMobile ? "h-11" : "h-9"
+                )}>
                   <TabsTrigger value="all" className="rounded-full text-xs">All</TabsTrigger>
                   <TabsTrigger value="pending" className="rounded-full text-xs">Pending</TabsTrigger>
                   <TabsTrigger value="in-progress" className="rounded-full text-xs">In Progress</TabsTrigger>
@@ -146,7 +155,10 @@ export const TaskFilters: React.FC<TaskFiltersProps> = ({
                       borderColor: tag.color,
                     }}
                     variant={currentFilter === tag.id ? "default" : "outline"}
-                    className="cursor-pointer hover:opacity-80 shadow-sm"
+                    className={cn(
+                      "cursor-pointer hover:opacity-80 shadow-sm",
+                      isMobile && "text-sm py-1"
+                    )}
                     onClick={() => handleFilterClick(tag.id)}
                   >
                     {tag.name}
