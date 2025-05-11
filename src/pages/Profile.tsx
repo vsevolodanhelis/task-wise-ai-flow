@@ -99,31 +99,37 @@ const Profile = () => {
     }
   };
 
-  const updateProfile = async (updates: {
-    full_name?: string;
-    avatar_url?: string;
-    updated_at?: string;
-  }) => {
+  const updateProfile = async () => {
     if (!user) return;
-
+    
+    setIsSaving(true);
+    
     try {
-      updates.updated_at = new Date().toISOString();
-
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          email: user.email || '',  // Add the required email field
-          ...updates,
-        });
-
+        .update({ 
+          full_name: fullName,
+          avatar_url: avatarUrl,
+          updated_at: new Date().toISOString(),
+          email: user.email // Include email field in the update
+        })
+        .eq('id', user.id);
+    
       if (error) throw error;
-    } catch (error: any) {
+    
       toast({
-        title: 'Profile update failed',
-        description: error.message,
-        variant: 'destructive',
+        title: "Profile updated",
+        description: "Your profile information has been updated.",
       });
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Update failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -133,7 +139,7 @@ const Profile = () => {
     
     setSaving(true);
     try {
-      await updateProfile({ full_name: fullName });
+      await updateProfile();
       toast({
         title: 'Profile updated',
         description: 'Your profile has been updated successfully.',
