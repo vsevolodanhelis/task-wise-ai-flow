@@ -1,274 +1,284 @@
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { User, ArrowLeft, Camera, Loader2 } from 'lucide-react';
+import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Edit, Save } from "lucide-react";
-
-interface ProfileData {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  email: string;
-}
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 const Profile = () => {
-  const { user, isAuthenticated, loading } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+  const { user, isGuest, loading: authLoading } = useAuth();
   const [fullName, setFullName] = useState("");
-  const [profileData, setProfileData] = useState<ProfileData | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
-
+  
   useEffect(() => {
+    if (isGuest) {
+      setProfileLoading(false);
+      return;
+    }
+
     if (user) {
       fetchProfile();
     }
   }, [user]);
 
   const fetchProfile = async () => {
+    if (!user?.id) return;
+    
     try {
-      setIsLoading(true);
-      if (!user) return;
-
       const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       if (data) {
-        setProfileData(data);
-        setFullName(data.full_name || "");
+        setFullName(data.full_name || '');
         setAvatarUrl(data.avatar_url);
-      } else {
-        // Create a profile if it doesn't exist
-        const { error: insertError } = await supabase
-          .from("profiles")
-          .insert([
-            {
-              id: user.id,
-              email: user.email,
-              full_name: "",
-              avatar_url: null,
-            },
-          ]);
-
-        if (insertError) throw insertError;
-
-        setProfileData({
-          id: user.id,
-          full_name: "",
-          avatar_url: null,
-          email: user.email || "",
-        });
       }
-    } catch (error: any) {
-      console.error("Error fetching profile:", error);
-      toast({
-        title: "Error fetching profile",
-        description: error.message,
-        variant: "destructive",
-      });
+    } catch (error) {
+      console.error('Error fetching profile:', error);
     } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const updateProfile = async () => {
-    try {
-      setIsLoading(true);
-      if (!user) return;
-
-      const updates = {
-        id: user.id,
-        full_name: fullName,
-        avatar_url: avatarUrl,
-        updated_at: new Date(),
-      };
-
-      const { error } = await supabase
-        .from("profiles")
-        .update(updates)
-        .eq("id", user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully",
-      });
-
-      setIsEditing(false);
-    } catch (error: any) {
-      console.error("Error updating profile:", error);
-      toast({
-        title: "Error updating profile",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      setProfileLoading(false);
     }
   };
 
   const uploadAvatar = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!event.target.files || event.target.files.length === 0 || !user) {
+      return;
+    }
+
+    const file = event.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${user.id}/avatar.${fileExt}`;
+
+    setUploading(true);
+
     try {
-      setUploading(true);
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error("You must select an image to upload.");
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        throw uploadError;
       }
 
-      const file = event.target.files[0];
-      const fileExt = file.name.split(".").pop();
-      const filePath = `${user?.id}-${Math.random()}.${fileExt}`;
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
 
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
-
-      setAvatarUrl(data.publicUrl);
-
-      // Update profile with new avatar URL
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({
-          avatar_url: data.publicUrl,
-          updated_at: new Date(),
-        })
-        .eq("id", user?.id);
-
-      if (updateError) throw updateError;
+      setAvatarUrl(publicUrl);
+      await updateProfile({ avatar_url: publicUrl });
 
       toast({
-        title: "Avatar updated",
-        description: "Your avatar has been updated successfully",
+        title: 'Avatar updated',
+        description: 'Your profile image has been updated successfully.',
       });
     } catch (error: any) {
-      console.error("Error uploading avatar:", error);
       toast({
-        title: "Error uploading avatar",
+        title: 'Avatar upload failed',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setUploading(false);
     }
   };
 
-  // Redirect to auth if not authenticated
-  useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      navigate("/auth");
-    }
-  }, [loading, isAuthenticated, navigate]);
+  const updateProfile = async (updates: {
+    full_name?: string;
+    avatar_url?: string;
+    updated_at?: string;
+  }) => {
+    if (!user) return;
 
-  if (loading || isLoading) {
+    try {
+      updates.updated_at = new Date().toISOString();
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          ...updates,
+        });
+
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: 'Profile update failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    
+    setSaving(true);
+    try {
+      await updateProfile({ full_name: fullName });
+      toast({
+        title: 'Profile updated',
+        description: 'Your profile has been updated successfully.',
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const userInitials = fullName ? fullName.split(' ').map(n => n[0]).join('').toUpperCase() : (
+    user?.email ? user.email[0].toUpperCase() : 'U'
+  );
+
+  if (authLoading || profileLoading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-task-purple"></div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Button 
-        variant="outline" 
-        className="mb-6" 
-        onClick={() => navigate("/")}
-      >
-        Back to Dashboard
-      </Button>
+    <div className="min-h-screen bg-gradient-to-b from-background to-accent/20 p-4">
+      <div className="container max-w-2xl mx-auto">
+        <Button 
+          variant="ghost" 
+          className="mb-6" 
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
 
-      <Card className="max-w-md mx-auto">
-        <CardHeader>
-          <CardTitle>Profile</CardTitle>
-          <CardDescription>
-            Manage your profile information
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="flex flex-col items-center space-y-4">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={avatarUrl || undefined} alt={fullName || "Avatar"} />
-              <AvatarFallback>
-                {fullName ? fullName.charAt(0).toUpperCase() : user?.email?.charAt(0).toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            
-            <div>
-              <Label 
-                htmlFor="avatar-upload" 
-                className="cursor-pointer bg-secondary text-secondary-foreground px-4 py-2 rounded-md hover:bg-secondary/80 transition-colors"
-              >
-                {uploading ? "Uploading..." : "Change Avatar"}
-              </Label>
-              <Input
-                id="avatar-upload"
-                type="file"
-                accept="image/*"
-                onChange={uploadAvatar}
-                disabled={uploading}
-                className="hidden"
-              />
-            </div>
-          </div>
+        <div className="space-y-6">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-task-purple to-task-purple-dark bg-clip-text text-transparent">
+            Profile Settings
+          </h1>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={user?.email || ""}
-              disabled
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="fullname">Full Name</Label>
-            <Input
-              id="fullname"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              disabled={!isEditing}
-            />
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-end">
-          {isEditing ? (
-            <Button 
-              onClick={updateProfile} 
-              className="bg-gradient-to-r from-task-purple to-task-purple-dark hover:bg-task-purple-dark"
-              disabled={isLoading}
-            >
-              <Save className="mr-2 h-4 w-4" /> Save Profile
-            </Button>
+          {isGuest ? (
+            <Alert variant="destructive" className="mb-6">
+              <User className="h-4 w-4 mr-2" />
+              <AlertTitle>Guest Mode</AlertTitle>
+              <AlertDescription className="mt-2">
+                Profile settings are disabled in guest mode. Please create an account to access all features.
+                <div className="mt-4">
+                  <Button onClick={() => navigate('/auth')}>
+                    Create Account
+                  </Button>
+                </div>
+              </AlertDescription>
+            </Alert>
           ) : (
-            <Button
-              onClick={() => setIsEditing(true)}
-              variant="outline"
-            >
-              <Edit className="mr-2 h-4 w-4" /> Edit Profile
-            </Button>
+            <>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Your Profile</CardTitle>
+                  <CardDescription>Manage your personal information</CardDescription>
+                </CardHeader>
+                <form onSubmit={handleSubmit}>
+                  <CardContent className="space-y-6">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <div className="relative">
+                        <Avatar className="w-24 h-24">
+                          {avatarUrl ? (
+                            <AvatarImage src={avatarUrl} alt={fullName || 'User'} />
+                          ) : null}
+                          <AvatarFallback className="text-lg bg-task-purple text-white">
+                            {userInitials}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="absolute bottom-0 right-0">
+                          <Label htmlFor="avatar" className="cursor-pointer">
+                            <div className="p-1.5 rounded-full bg-task-purple text-white shadow-md hover:bg-task-purple-dark transition-colors">
+                              {uploading ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <Camera className="h-4 w-4" />
+                              )}
+                            </div>
+                          </Label>
+                          <Input 
+                            id="avatar" 
+                            type="file" 
+                            accept="image/*" 
+                            className="hidden" 
+                            onChange={uploadAvatar} 
+                            disabled={uploading}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {user?.email}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="fullName">Full Name</Label>
+                      <Input 
+                        id="fullName" 
+                        placeholder="Your name" 
+                        value={fullName} 
+                        onChange={(e) => setFullName(e.target.value)}
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-task-purple to-task-purple-dark hover:bg-task-purple-dark"
+                      type="submit"
+                      disabled={saving}
+                    >
+                      {saving ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Saving...
+                        </>
+                      ) : 'Save Changes'}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Account Settings</CardTitle>
+                  <CardDescription>Manage your account preferences</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="text-sm text-muted-foreground">
+                    <p>Email: {user?.email}</p>
+                    <p>Account created: {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}</p>
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between">
+                  <Button variant="outline" onClick={() => navigate('/')}>
+                    Go to Dashboard
+                  </Button>
+                </CardFooter>
+              </Card>
+            </>
           )}
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

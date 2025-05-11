@@ -1,7 +1,4 @@
-
-export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
-
-export type TaskStatus = 'pending' | 'in-progress' | 'completed';
+export type TaskStatus = "pending" | "in-progress" | "completed";
 
 export type TaskTag = {
   id: string;
@@ -9,19 +6,19 @@ export type TaskTag = {
   color: string;
 };
 
-export type Task = {
+export type TaskPriority = "low" | "medium" | "high" | string;
+
+export interface Task {
   id: string;
   title: string;
-  description: string;
-  dueDate: Date | null;
-  priority: TaskPriority;
+  description?: string;
   status: TaskStatus;
+  priority: TaskPriority;
+  progress?: number;
+  dueDate?: Date | string | null;
   tags: TaskTag[];
-  createdAt: Date;
-  updatedAt: Date;
-  aiScore?: number; // AI computed score for prioritization
-  dependencies?: string[]; // IDs of tasks this task depends on
-  estimatedTime?: number; // In minutes
-  completedAt?: Date;
-  progress?: number; // Progress percentage (0-100)
-};
+  createdAt: Date | string;
+  updatedAt: Date | string;
+  completedAt?: Date | string | null;
+  aiScore?: number | null;
+}

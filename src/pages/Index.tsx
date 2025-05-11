@@ -9,9 +9,10 @@ import { TaskForm } from "@/components/TaskForm";
 import { TaskAnalytics } from "@/components/TaskAnalytics";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, LayoutDashboard, List, Calendar, Settings, User, LogOut, Sparkles } from "lucide-react";
+import { Plus, LayoutDashboard, List, Calendar, Settings, User, LogOut, Sparkles, AlertTriangle } from "lucide-react";
 import { TaskStatus } from "@/types/task";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const Dashboard = () => {
   const [showAddTask, setShowAddTask] = useState(false);
@@ -20,7 +21,7 @@ const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
   const [showAiPrioritized, setShowAiPrioritized] = useState(false);
   const [activeView, setActiveView] = useState<"tasks" | "analytics">("tasks");
-  const { signOut, user } = useAuth();
+  const { signOut, user, isGuest, setGuestMode } = useAuth();
   
   const isMobile = useIsMobile();
 
@@ -33,7 +34,11 @@ const Dashboard = () => {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    if (isGuest) {
+      setGuestMode(false);
+    } else {
+      await signOut();
+    }
   };
 
   return (
@@ -70,6 +75,21 @@ const Dashboard = () => {
       </header>
 
       <div className="px-4 py-4">
+        {isGuest && (
+          <Alert variant="warning" className="mb-4 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            <AlertDescription>
+              You're in Guest Mode. Your data is stored only on this device and will be lost when you clear your browser data.
+              <Link to="/auth">
+                <Button variant="link" className="h-auto p-0 pl-1 text-yellow-800 dark:text-yellow-200 underline">
+                  Sign up for an account
+                </Button>
+              </Link>
+              to save your data.
+            </AlertDescription>
+          </Alert>
+        )}
+        
         <div className="flex flex-col gap-5">
           {/* Mobile Tabs */}
           <div className="w-full flex overflow-x-auto no-scrollbar space-x-2 pb-2">
@@ -106,16 +126,18 @@ const Dashboard = () => {
               <Sparkles className="mr-1.5 h-3.5 w-3.5" />
               AI Priority
             </Button>
-            <Link to="/profile" className="ml-auto">
-              <Button 
-                variant="outline" 
-                className="flex justify-start whitespace-nowrap rounded-full border-border/50" 
-                size="sm"
-              >
-                <User className="mr-1.5 h-3.5 w-3.5" />
-                Profile
-              </Button>
-            </Link>
+            {!isGuest && (
+              <Link to="/profile" className="ml-auto">
+                <Button 
+                  variant="outline" 
+                  className="flex justify-start whitespace-nowrap rounded-full border-border/50" 
+                  size="sm"
+                >
+                  <User className="mr-1.5 h-3.5 w-3.5" />
+                  Profile
+                </Button>
+              </Link>
+            )}
             <Button 
               variant="outline" 
               className="flex justify-start whitespace-nowrap rounded-full border-border/50" 
@@ -123,7 +145,7 @@ const Dashboard = () => {
               onClick={handleSignOut}
             >
               <LogOut className="mr-1.5 h-3.5 w-3.5" />
-              Sign Out
+              {isGuest ? "Exit Guest Mode" : "Sign Out"}
             </Button>
           </div>
 

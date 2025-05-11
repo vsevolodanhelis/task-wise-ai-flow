@@ -7,16 +7,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 const Auth = () => {
-  const { signIn, signUp, isAuthenticated, loading } = useAuth();
+  const { signIn, signUp, isAuthenticated, isGuest, loading, setGuestMode } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Redirect to dashboard if already authenticated
-  if (isAuthenticated) {
+  // Redirect to dashboard if already authenticated or in guest mode
+  if (isAuthenticated || isGuest) {
     return <Navigate to="/" />;
   }
 
@@ -44,6 +45,11 @@ const Auth = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleGuestMode = () => {
+    setGuestMode(true);
+    navigate("/");
   };
 
   if (loading) {
@@ -157,6 +163,30 @@ const Auth = () => {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <div className="mt-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator className="w-full" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleGuestMode}
+            >
+              Continue as Guest
+            </Button>
+            <p className="text-center text-xs text-muted-foreground mt-3">
+              Guest mode has limited functionality. Your data won't be saved across sessions.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

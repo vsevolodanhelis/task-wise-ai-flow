@@ -4,6 +4,7 @@ import { Task, TaskPriority, TaskStatus, TaskTag } from "@/types/task";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import * as taskService from "@/services/taskService";
+import { v4 as uuidv4 } from 'uuid';
 
 // Predefined tags
 export const DEFAULT_TAGS: TaskTag[] = [
@@ -31,35 +32,90 @@ interface TaskContextProps {
 
 const TaskContext = createContext<TaskContextProps | undefined>(undefined);
 
+// Local storage keys
+const LOCAL_STORAGE_TASKS_KEY = "kairo_guest_tasks";
+const LOCAL_STORAGE_TAGS_KEY = "kairo_guest_tags";
+
 export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tags, setTags] = useState<TaskTag[]>([]);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isGuest } = useAuth();
 
-  // Fetch tasks and tags whenever the authenticated user changes
+  // Fetch tasks and tags whenever the authenticated user changes or guest mode changes
   useEffect(() => {
-    if (user?.id) {
+    if (isGuest) {
+      loadLocalData();
+    } else if (user?.id) {
       fetchUserData();
     } else if (!isAuthenticated) {
-      // Clear tasks when not authenticated
+      // Clear tasks when not authenticated and not in guest mode
       setTasks([]);
       setTags([]);
       setLoading(false);
     }
-  }, [user?.id, isAuthenticated]);
+  }, [user?.id, isAuthenticated, isGuest]);
 
-  // Set up realtime subscription for task updates
+  // Set up realtime subscription for task updates (only when authenticated)
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || isGuest) return;
     
     const unsubscribe = taskService.setupTasksSubscription(user.id, fetchUserData);
     
     return () => {
       unsubscribe();
     };
-  }, [user?.id]);
+  }, [user?.id, isGuest]);
+
+  // Load data from local storage for guest mode
+  const loadLocalData = () => {
+    setLoading(true);
+    try {
+      // Load tasks from localStorage
+      const storedTasks = localStorage.getItem(LOCAL_STORAGE_TASKS_KEY);
+      if (storedTasks) {
+        setTasks(JSON.parse(storedTasks));
+      } else {
+        setTasks([]);
+      }
+      
+      // Load tags from localStorage
+      const storedTags = localStorage.getItem(LOCAL_STORAGE_TAGS_KEY);
+      if (storedTags) {
+        setTags(JSON.parse(storedTags));
+      } else {
+        // Initialize with default tags
+        setTags(DEFAULT_TAGS.map(tag => ({
+          ...tag,
+          id: uuidv4() // Generate unique IDs for guest mode
+        })));
+        // Save default tags to localStorage
+        localStorage.setItem(LOCAL_STORAGE_TAGS_KEY, JSON.stringify(DEFAULT_TAGS));
+      }
+    } catch (error) {
+      console.error("Error loading local data:", error);
+      // Reset to defaults
+      setTasks([]);
+      setTags(DEFAULT_TAGS);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Save tasks to localStorage (for guest mode)
+  const saveTasksToLocalStorage = (updatedTasks: Task[]) => {
+    if (isGuest) {
+      localStorage.setItem(LOCAL_STORAGE_TASKS_KEY, JSON.stringify(updatedTasks));
+    }
+  };
+
+  // Save tags to localStorage (for guest mode)
+  const saveTagsToLocalStorage = (updatedTags: TaskTag[]) => {
+    if (isGuest) {
+      localStorage.setItem(LOCAL_STORAGE_TAGS_KEY, JSON.stringify(updatedTags));
+    }
+  };
 
   const fetchUserData = async () => {
     if (!user?.id) return;
@@ -102,6 +158,11 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const refetchTasks = async () => {
+    if (isGuest) {
+      loadLocalData();
+      return;
+    }
+    
     if (!user?.id) return;
     
     try {
@@ -118,6 +179,29 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const addTask = async (task: Omit<Task, "id" | "createdAt" | "updatedAt" | "aiScore">) => {
+    // Handle guest mode
+    if (isGuest) {
+      const now = new Date();
+      const newTask: Task = {
+        ...task,
+        id: uuidv4(),
+        createdAt: now,
+        updatedAt: now,
+        aiScore: calculateAiScoreForGuest(task),
+      };
+      
+      const updatedTasks = [...tasks, newTask];
+      setTasks(updatedTasks);
+      saveTasksToLocalStorage(updatedTasks);
+      
+      toast({
+        title: "Task added",
+        description: `"${task.title}" has been added to your tasks.`,
+      });
+      return;
+    }
+    
+    // Handle authenticated mode
     if (!user?.id) return;
     
     try {
@@ -144,7 +228,54 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  // Calculate AI score for guest mode (simplified version)
+  const calculateAiScoreForGuest = (task: Omit<Task, "id" | "createdAt" | "updatedAt" | "aiScore">) => {
+    let score = 0;
+    
+    // Priority based score
+    if (task.priority === 'high') score += 30;
+    else if (task.priority === 'medium') score += 20;
+    else score += 10;
+    
+    // Due date based score
+    if (task.dueDate) {
+      const dueDate = new Date(task.dueDate);
+      const today = new Date();
+      const diffDays = Math.round((dueDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+      
+      if (diffDays <= 1) score += 30;
+      else if (diffDays <= 3) score += 20;
+      else if (diffDays <= 7) score += 10;
+    }
+    
+    // Tags based score
+    if (task.tags.some(tag => tag.name.toLowerCase() === 'urgent')) {
+      score += 25;
+    }
+    
+    return score;
+  };
+
   const updateTask = async (updatedTask: Task) => {
+    // Handle guest mode
+    if (isGuest) {
+      const updatedTasks = tasks.map((t) => 
+        t.id === updatedTask.id 
+          ? { ...updatedTask, updatedAt: new Date(), aiScore: calculateAiScoreForGuest(updatedTask) } 
+          : t
+      );
+      
+      setTasks(updatedTasks);
+      saveTasksToLocalStorage(updatedTasks);
+      
+      toast({
+        title: "Task updated",
+        description: `"${updatedTask.title}" has been updated.`,
+      });
+      return;
+    }
+    
+    // Handle authenticated mode
     if (!user?.id) return;
     
     try {
@@ -174,6 +305,24 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const deleteTask = async (taskId: string) => {
+    // Handle guest mode
+    if (isGuest) {
+      const taskToDelete = tasks.find(task => task.id === taskId);
+      if (!taskToDelete) return;
+      
+      const updatedTasks = tasks.filter((task) => task.id !== taskId);
+      setTasks(updatedTasks);
+      saveTasksToLocalStorage(updatedTasks);
+      
+      toast({
+        title: "Task deleted",
+        description: `"${taskToDelete.title}" has been deleted.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Handle authenticated mode
     if (!user?.id) return;
     
     const taskToDelete = tasks.find(task => task.id === taskId);
@@ -205,6 +354,25 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const addTag = async (tag: Omit<TaskTag, "id">) => {
+    // Handle guest mode
+    if (isGuest) {
+      const newTag: TaskTag = {
+        ...tag,
+        id: uuidv4(),
+      };
+      
+      const updatedTags = [...tags, newTag];
+      setTags(updatedTags);
+      saveTagsToLocalStorage(updatedTags);
+      
+      toast({
+        title: "Tag created",
+        description: `"${tag.name}" tag has been created.`,
+      });
+      return;
+    }
+    
+    // Handle authenticated mode
     if (!user?.id) return;
     
     try {
@@ -231,7 +399,7 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const toggleTaskStatus = async (taskId: string) => {
     const task = tasks.find(t => t.id === taskId);
-    if (!task || !user?.id) return;
+    if (!task) return;
     
     const newStatus: TaskStatus = 
       task.status === 'pending' ? 'in-progress' :
@@ -254,7 +422,7 @@ export const TaskProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const updateTaskProgress = async (taskId: string, progress: number) => {
     const task = tasks.find(t => t.id === taskId);
-    if (!task || !user?.id) return;
+    if (!task) return;
     
     // Update status based on progress
     let status: TaskStatus = task.status;

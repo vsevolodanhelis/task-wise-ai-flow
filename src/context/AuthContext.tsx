@@ -12,6 +12,8 @@ interface AuthContextProps {
   signOut: () => Promise<void>;
   loading: boolean;
   isAuthenticated: boolean;
+  isGuest: boolean;
+  setGuestMode: (enabled: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -20,9 +22,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isGuest, setIsGuest] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check if the user has chosen guest mode from localStorage
+    const storedGuestMode = localStorage.getItem("guestMode") === "true";
+    if (storedGuestMode) {
+      setIsGuest(true);
+    }
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
@@ -36,6 +45,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             title: "Signed in successfully",
             description: `Welcome back${newSession?.user?.email ? ', ' + newSession.user.email : ''}!`,
           });
+          // If user signs in, disable guest mode
+          setIsGuest(false);
+          localStorage.removeItem("guestMode");
         } else if (event === 'SIGNED_OUT') {
           toast({
             title: "Signed out",
@@ -112,6 +124,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
+  const setGuestMode = (enabled: boolean) => {
+    setIsGuest(enabled);
+    if (enabled) {
+      localStorage.setItem("guestMode", "true");
+      toast({
+        title: "Guest Mode Activated",
+        description: "Using app with limited functionality. Sign up for full features!",
+      });
+    } else {
+      localStorage.removeItem("guestMode");
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -122,6 +147,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         signOut,
         loading,
         isAuthenticated: !!user,
+        isGuest,
+        setGuestMode,
       }}
     >
       {children}

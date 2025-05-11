@@ -24,7 +24,7 @@ const queryClient = new QueryClient({
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, isGuest } = useAuth();
 
   if (loading) {
     return (
@@ -34,7 +34,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!isAuthenticated) {
+  // Allow access if the user is authenticated OR in guest mode
+  if (!isAuthenticated && !isGuest) {
     return <Navigate to="/auth" replace />;
   }
 
@@ -42,7 +43,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 };
 
 const AppContent = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isGuest } = useAuth();
   
   return (
     <>
