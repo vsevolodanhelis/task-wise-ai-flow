@@ -1,13 +1,15 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { TaskProvider } from "@/context/TaskContext";
+import { useAuth } from "@/context/AuthContext";
 import { TaskList } from "@/components/TaskList";
 import { TaskFilters } from "@/components/TaskFilters";
 import { TaskForm } from "@/components/TaskForm";
 import { TaskAnalytics } from "@/components/TaskAnalytics";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, LayoutDashboard, List, Calendar, Settings, Sparkles } from "lucide-react";
+import { Plus, LayoutDashboard, List, Calendar, Settings, User, LogOut, Sparkles } from "lucide-react";
 import { TaskStatus } from "@/types/task";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -18,6 +20,9 @@ const Dashboard = () => {
   const [statusFilter, setStatusFilter] = useState<TaskStatus | "all">("all");
   const [showAiPrioritized, setShowAiPrioritized] = useState(false);
   const [activeView, setActiveView] = useState<"tasks" | "analytics">("tasks");
+  const { signOut, user } = useAuth();
+  
+  const isMobile = useIsMobile();
 
   const handleAddTask = () => {
     setShowAddTask(true);
@@ -25,6 +30,10 @@ const Dashboard = () => {
 
   const handleAddTaskComplete = () => {
     setShowAddTask(false);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
   };
 
   return (
@@ -39,14 +48,24 @@ const Dashboard = () => {
               Beta
             </span>
           </div>
-          <Button
-            className="bg-gradient-to-r from-task-purple to-task-purple-dark hover:bg-task-purple-dark transition-all shadow-sm"
-            size="sm"
-            onClick={handleAddTask}
-          >
-            <Plus className="mr-1 h-3.5 w-3.5" />
-            Add Task
-          </Button>
+          <div className="flex items-center gap-2">
+            {!isMobile && (
+              <Link to="/profile">
+                <Button variant="outline" size="sm" className="mr-2">
+                  <User className="mr-1 h-3.5 w-3.5" />
+                  Profile
+                </Button>
+              </Link>
+            )}
+            <Button
+              className="bg-gradient-to-r from-task-purple to-task-purple-dark hover:bg-task-purple-dark transition-all shadow-sm"
+              size="sm"
+              onClick={handleAddTask}
+            >
+              <Plus className="mr-1 h-3.5 w-3.5" />
+              Add Task
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -77,15 +96,6 @@ const Dashboard = () => {
               Analytics
             </Button>
             <Button 
-              variant="outline" 
-              className="flex justify-start whitespace-nowrap rounded-full border-border/50" 
-              size="sm"
-              disabled
-            >
-              <Calendar className="mr-1.5 h-3.5 w-3.5" />
-              Calendar
-            </Button>
-            <Button 
               variant={showAiPrioritized ? "default" : "outline"}
               className={`flex justify-start whitespace-nowrap rounded-full ${
                 showAiPrioritized ? "bg-task-purple hover:bg-task-purple-dark text-white shadow-sm" : "border-border/50"
@@ -95,6 +105,25 @@ const Dashboard = () => {
             >
               <Sparkles className="mr-1.5 h-3.5 w-3.5" />
               AI Priority
+            </Button>
+            <Link to="/profile" className="ml-auto">
+              <Button 
+                variant="outline" 
+                className="flex justify-start whitespace-nowrap rounded-full border-border/50" 
+                size="sm"
+              >
+                <User className="mr-1.5 h-3.5 w-3.5" />
+                Profile
+              </Button>
+            </Link>
+            <Button 
+              variant="outline" 
+              className="flex justify-start whitespace-nowrap rounded-full border-border/50" 
+              size="sm"
+              onClick={handleSignOut}
+            >
+              <LogOut className="mr-1.5 h-3.5 w-3.5" />
+              Sign Out
             </Button>
           </div>
 
