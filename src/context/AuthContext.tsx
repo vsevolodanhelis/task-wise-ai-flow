@@ -53,6 +53,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             title: "Signed out",
             description: "You have been signed out",
           });
+        } else if (event === 'SIGNED_UP') {
+          toast({
+            title: "Account created",
+            description: "Your account has been created successfully!",
+          });
         }
       }
     );
@@ -71,17 +76,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
+      const { error, data } = await supabase.auth.signUp({
         email,
         password,
       });
 
       if (error) throw error;
-
-      toast({
-        title: "Sign up successful",
-        description: "Please check your email to verify your account",
-      });
+      
+      // If we have data and a user, the sign up was successful
+      if (data && data.user) {
+        toast({
+          title: "Sign up successful",
+          description: "Your account has been created!",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "Sign up failed",

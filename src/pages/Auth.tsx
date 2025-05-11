@@ -39,7 +39,8 @@ const Auth = () => {
     setIsLoading(true);
     try {
       await signUp(email, password);
-      // Stay on the page so they can see the toast about checking email
+      // Navigate directly to dashboard after signup
+      navigate("/");
     } catch (error) {
       console.error("Sign up error:", error);
     } finally {

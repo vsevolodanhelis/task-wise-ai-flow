@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Task, TaskTag, TaskPriority, TaskStatus } from "@/types/task";
 
@@ -315,4 +314,30 @@ export const calculateAiScore = (task: Omit<Task, "id" | "createdAt" | "updatedA
   }
   
   return score;
+};
+
+// Add this function to the existing file
+export const generateAiPriorities = async (tasks: Task[], userId: string | null) => {
+  try {
+    const response = await fetch('/api/ai-prioritize', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        tasks,
+        userId: userId || 'guest'
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.aiScores;
+  } catch (error) {
+    console.error('Error getting AI priorities:', error);
+    throw error;
+  }
 };
