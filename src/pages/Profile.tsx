@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -114,6 +113,7 @@ const Profile = () => {
         .from('profiles')
         .upsert({
           id: user.id,
+          email: user.email || '',  // Add the required email field
           ...updates,
         });
 

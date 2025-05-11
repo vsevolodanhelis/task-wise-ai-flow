@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { TaskProvider } from "@/context/TaskContext";
@@ -76,7 +75,7 @@ const Dashboard = () => {
 
       <div className="px-4 py-4">
         {isGuest && (
-          <Alert variant="warning" className="mb-4 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200">
+          <Alert className="mb-4 border-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-200">
             <AlertTriangle className="h-4 w-4 mr-2" />
             <AlertDescription>
               You're in Guest Mode. Your data is stored only on this device and will be lost when you clear your browser data.
