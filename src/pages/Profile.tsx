@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -82,7 +83,9 @@ const Profile = () => {
         .getPublicUrl(filePath);
 
       setAvatarUrl(publicUrl);
-      await updateProfile({ avatar_url: publicUrl });
+      
+      // Update profile with new avatar URL
+      await updateProfile();
 
       toast({
         title: 'Avatar updated',
@@ -102,7 +105,7 @@ const Profile = () => {
   const updateProfile = async () => {
     if (!user) return;
     
-    setIsSaving(true);
+    setSaving(true);
     
     try {
       const { error } = await supabase
@@ -129,7 +132,7 @@ const Profile = () => {
         variant: "destructive",
       });
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
 
